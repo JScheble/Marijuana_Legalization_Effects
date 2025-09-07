@@ -1,0 +1,11 @@
+---
+title: "Hello"
+project:
+  output-dir: docs
+format: html
+execute:
+  echo: false
+---
+
+# It works!
+This should save to docs/hello.html.

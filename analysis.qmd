@@ -1,0 +1,416 @@
+---
+title: "Impact of Marijuana on Usage Rates"
+author:
+  - "Authors: Anish Poudel, Cooper Scheble, Joseph Pelkey"
+format:
+  html:
+    theme: cosmo
+params:
+  show_code: true
+execute:
+  echo: !expr params$show_code
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = params$show_code,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(readr) 
+library(tidyverse)
+library(sandwich)
+library(lmtest)
+library(readxl)
+library(broom)
+library(glue)
+library(glmnet)
+library(palmerpenguins)
+
+```
+
+## Intro
+
+This project investigates the impact of marijuana legalization on usage rates across U.S. states, with a focus on estimating and predicting how legalization influences the percentage of people who report using marijuana in the past year, including everyone who is 12+. We begin by comparing usage trends in states that legalized marijuana with those that did not, followed by a difference-in-differences analysis to isolate the causal effect of legalization. Our analysis estimates that legalization is associated with a 5% increase in usage throughout the study. We also used visualization to show counterfactual trends had legalization not occurred, and examine whether youth usage (ages 12–17) increased following legalization, finding little evidence of change. Finally, we apply a lasso regression to evaluate predictive performance using various explanatory variables and interactions.
+
+## 1. Data
+
+Our analysis draws from a combination of different different sources. We sourced the data for marijuana usage rates from the Substance Abuse and Mental Health Services Administration. To assess the effects of marijuana legalization, we constructed indicators for treatment timing and legalization exposure. States that legalized marijuana in the 2010s—Colorado, Washington, and Oregon—serve as treated units, while a group of comparison states that did not legalize are used for controls. 
+
+To account for state-to-state differences, we also sourced poverty rate, state population, and median income for each year from Census Bureau summarizations. We merged these variables with state usage data to control for underlying socioeconomic differences. To control for education differences we added a variable showing the percentage of people with a bachelor's degree or above. However, missing data before 2007 impacted our model too heavily to include it in our final dataset. We excluded observations where survey or economic data were missing for specific state-year pairs to avoid introducing bias. 
+
+The data contains 114 state-year observations across 6 states, covering the period of 2002-2022. The average percentage of people 12+ who have tried marijuana in the past year was ~ 15%. Ages 18-25 were significantly higher at ~33% of people. Average median income was 54,000$ and poverty rates ranged from 9.6%-19.20% depending on the state and year.
+
+```{r}
+#Load Main Usage Dataset
+usage_df <- read_excel("StateMarijuanaData.xlsx")
+```
+
+```{r}
+#Clean the Year Pair variable to just one year.
+usage_df <- usage_df %>%
+  mutate(Year = as.numeric(sub("-.*", "", year_pair)))
+```
+
+```{r}
+#Load in datasets
+Poverty_df <- read_xlsx("Poverty Rates.xlsx")
+State_Pop <- read_xlsx("State_Populations.xlsx")
+Median_Income <- read_xlsx("MedianIncome.xlsx")
+```
+
+```{r}
+#Rename Variable in Usage Dataset
+usage_df <- usage_df %>%
+  rename(State = geography)
+```
+
+```{r}
+#Join the Datasets
+full_df <- usage_df %>%
+  left_join(Poverty_df, by = c("State", "Year"))
+
+full_df <- full_df %>%
+  left_join(State_Pop, by = c("State", "Year"))
+
+full_df <- full_df %>%
+  left_join(Median_Income, by = c("State", "Year"))
+```
+
+```{r}
+write_csv(full_df, "C:/Users/13124/Downloads/merged_marijuana_data.csv")
+```
+
+```{r}
+#Create binary Post Variable, set to 1 = Post Legalization
+full_df <- full_df %>%
+  mutate(
+    Post = case_when(
+      (State == "Colorado" & Year >= 2014) |
+      (State == "Washington" & Year >= 2014) |
+      (State == "Oregon" & Year >= 2015) ~ 1,
+      TRUE ~ 0
+    )
+  )
+```
+
+```{r}
+#Mark the Treated States in the dataset
+
+full_df <- full_df %>%
+  mutate(
+    Treated = if_else(State %in% c("Colorado", "Washington", "Oregon"), 1, 0)
+  )
+```
+
+```{r}
+#Section off the Treated States
+treated_states <- c("Colorado", "Washington", "Oregon")
+
+
+#Create a dataset of years before Legalization for testing
+pretrend_df <- full_df %>%
+  filter(Year >= 2005 & Year < 2014) %>%
+  mutate(Group = if_else(State %in% treated_states, "Treated", "Control")) %>%
+  group_by(Year, Group) %>%
+  summarize(Avg_Use = mean(`12+`, na.rm = TRUE), .groups = "drop")
+```
+
+## 2. Visualization
+
+This section explores the relationship between recreational marijuana legalization and past-year marijuana use among individuals aged 12 and older. We examine not only aggregate state-level trends, but also how treated states compare to controls over time, and whether legalization disrupted prior trends in meaningful ways.
+
+```{r, fig.width=9, fig.height=4, warning=FALSE}
+ggplot(usage_df, aes(x = Year, y = `12+`, color = State)) +
+  geom_line(size = 1.2) +
+  labs(
+    title = "Marijuana Use (Past Year) Over Time by State",
+    subtitle = "Age 12+ Population, 2002–2023",
+    x = "Year",
+    y = "Marijuana Use Rate (12+)",
+    color = "State"
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  theme_minimal(base_size = 14)
+```
+
+
+The first figure shows state-level trajectories in marijuana use from 2002–2023. We observe that states that eventually legalized marijuana—Colorado, Oregon, and Washington—experienced sharper increases in use compared to control states like Georgia, North Carolina, and Texas. Notably, usage rates began diverging more clearly around the early 2010s, aligning with the timing of legalization in treated states.
+
+&nbsp;  
+
+```{r fig.height=4, fig.width=7, fig.align='center'}
+
+ggplot(pretrend_df, aes(x = Year, y = Avg_Use, color = Group)) +
+  geom_line(size = 1.4) +
+  geom_point(size = 2) +
+  labs(
+    title = "Pre-Legalization Trends in Past Year Marijuana \nUse (Ages 12+)",
+    subtitle = "Treated and Control States Followed Similar Trajectories Before Legalization.",
+    x = "Year",
+    y = "% of Population",
+    color = "Group"
+  ) +
+  scale_color_manual(values = c("Treated" = "#E63946", "Control" = "#1D3557")) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "top",
+    plot.title = element_text(size = 18, face = "bold"),
+    plot.subtitle = element_text(size = 13)
+  )
+```
+
+
+Moving forward we focused on the pre-legalization period (2002–2013) and compared average marijuana use across treated and control groups. The parallel trajectories before policy adoption suggest that these groups followed similar trends before legalization—supporting the parallel trends assumption necessary for causal inference via difference-in-differences.
+<br><br>
+<br><br>
+<br><br>
+<br><br>
+
+```{r}
+#Model for testing 12+ with our control and factor variables
+model_adult_controls <- lm(
+  `12+` ~ Treated:Post + Median_Income + Poverty_Rate +
+    factor(State) + factor(Year),
+  data = full_df
+)
+
+results <- tidy(model_adult_controls)
+
+treated_post <- tidy(model_adult_controls) %>%
+  filter(term == "Treated:Post")
+
+estimate <- round(treated_post$estimate * 100, 2)     
+se       <- round(treated_post$std.error * 100, 2)    
+pval     <- signif(treated_post$p.value, 3)
+
+cat(glue("Legalization is associated with a {estimate}% point increase in \npast-year marijuana use among individuals aged 12 and older \n(SE = {se}, p = {pval})."))
+
+```
+
+```{r fig.height=9.3, fig.width=8}
+legal_years <- data.frame(
+  State = c("Colorado", "Washington", "Oregon"),
+  Legal_Year = c(2014, 2014, 2015),
+   y_position = c(0.31, 0.275, 0.295)
+)
+
+plot_df <- full_df %>%
+  filter(State %in% legal_years$State, Year >= 2012) %>%
+  left_join(legal_years, by = "State")
+
+plot_df$predicted_with_controls <- predict(model_adult_controls, newdata = plot_df)
+
+# Create the plot
+ggplot(plot_df, aes(x = Year)) +
+  geom_line(aes(y = `12+`, color = "Actual", linetype = "Actual"), size = 1.3) +
+  geom_line(aes(y = predicted_with_controls, color = "Predicted", linetype = "Predicted"), size = 1.3) +
+  geom_text(
+  data = legal_years,
+  aes(x = Legal_Year, y = 0.37, label = "Legalization Year"),
+  angle = 90, vjust = -0.5, hjust = 1.2, size = 3.5, color = "gray30", inherit.aes = FALSE
+) + coord_cartesian(ylim = c(0.15, 0.34)) +
+  geom_vline(
+  aes(xintercept = Legal_Year),
+  linetype = "dashed",       # or "solid" if you prefer
+  color = "black",           # stronger contrast
+  size = 1.1                 # increase line thickness (default is 0.5)
+) +
+  facet_wrap(~ State, ncol = 1) +
+  scale_x_continuous(breaks = seq(min(plot_df$Year), max(plot_df$Year), by = 1))+
+  scale_color_manual(
+    name = "Line Type",
+    values = c("Actual" = "#E63946", "Predicted" = "#1D3557")
+  ) +
+  scale_linetype_manual(
+    name = "Line Type",
+    values = c("Actual" = "solid", "Predicted" = "dashed") 
+  ) +
+  labs(
+    title = "Effect of Legalization on Past Year Marijuana Use (Ages 12+)",
+    subtitle = "Solid Line = Actual Use | Dashed Line = Predicted Use Under No Legalization.",
+    x = "Year",
+    y = "Percent of Population Ages 12+"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "top",
+    strip.text = element_text(size = 15, face = "bold"),
+    plot.title = element_text(size = 18, face = "bold"),
+    plot.subtitle = element_text(size = 12)
+  )
+
+#Used Generative Ai for help modeling graph
+```
+
+Now we compare observed marijuana use in the treated states to counterfactual predictions based on control states. In all three states, observed usage trends slightly exceed predicted values in various years following legalization, though the differences are modest and not uniform over time. In Colorado and Oregon, the gap is visible but narrow, but specifically in Oregon eventually, the prediction exceeds reality. However, in Washington, the lines largely converge again by the end of the series after over-estimating immediately following legalization. These patterns suggest that legalization may have contributed to a mild uptick in adult marijuana use, but the effect size appears small and attenuates over time. Overall, Legalization is associated with a 5.89% point increase in past-year marijuana use among individuals aged 12 and older.
+
+```{r, fig.height=8.5, fig.width=8}
+legal_years <- data.frame(
+  State = c("Colorado", "Washington", "Oregon"),
+  Legal_Year = c(2014, 2014, 2015)
+)
+
+teen_plot_df <- full_df %>%
+  filter(State %in% legal_years$State, Year >= 2010)
+
+ggplot(teen_plot_df, aes(x = Year, y = `12-17`)) +
+  geom_line(color = "#E63946", size = 1.3) +
+  geom_vline(data = legal_years, aes(xintercept = Legal_Year), 
+             linetype = "dashed", color = "black", size = 1.1) +
+  facet_wrap(~ State, ncol = 1, scales = "free_y") +
+  scale_x_continuous(breaks = seq(min(teen_plot_df$Year), max(teen_plot_df$Year), by = 1))+
+  labs(
+    title = "Teen Marijuana Use in Legalized States \n(Ages 12–17)",
+    subtitle = "Observable Negative Relationship Between Teen Usage and Time. \nDashed Line = Legalization Year.",
+    x = "Year",
+    y = "Use Rate (12–17)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    strip.text = element_text(size = 15, face = "bold"),
+    plot.title = element_text(size = 18, face = "bold")
+  )
+
+#Used Generative Ai for help modeling graph
+```
+
+
+
+
+Finally, we isolated the impact of legalization on teen marijuana use. In contrast to adults, no post-legalization increase is observed among teens in the treated states. Usage rates remained flat or even declined slightly, diverging from the pattern observed in the overall population. This suggests that legalization did not lead to greater marijuana use among adolescents, countering a common concern.
+
+Among teens (ages 12–17), legalization was associated with a 0.36 percentage point increase in past-year marijuana use, though this effect was not statistically significant (p = 0.265, SE = 0.0036).
+
+Together, these visuals reveal a clear story: legalization led to increased marijuana use among adults but not among teens. The analysis underscores the value of disaggregating effects by age group and highlights how policy impacts can differ sharply within a population.
+
+```{r}
+#Results from running Regression on just the teen data,
+model_teen <- lm(`12-17` ~ Treated:Post + factor(State) + factor(Year), data = full_df)
+model_teen_tibble <- tidy(model_teen) %>% filter(term == "Treated:Post")
+#model_teen_tibble
+```
+
+## 3. Predictive Model
+
+&nbsp;
+
+```{r}
+X <- model.matrix(
+  `12+` ~ (Treated + Post + Poverty_Rate + Median_Income + factor(State) + factor(Year))^2,
+  data = full_df
+)[, -1]  # Remove intercept
+
+y <- full_df$`12+`
+```
+
+```{r}
+set.seed(123)
+
+n <- nrow(X)
+eval_idx <- sample(1:n, size = 0.10 * n)
+X_eval <- X[eval_idx, ]
+y_eval <- y[eval_idx]
+X_main <- X[-eval_idx, ]
+y_main <- y[-eval_idx]
+
+# Index for train/test split
+train_indices <- sample(1:nrow(X_main), size = 0.9 * nrow(X_main))
+X_train <- X_main[train_indices, ]
+X_test  <- X_main[-train_indices, ]
+y_train <- y_main[train_indices]
+y_test  <- y_main[-train_indices]
+
+```
+
+```{r}
+# Fit LASSO (alpha = 1)
+lasso_model <- cv.glmnet(
+  X_train, y_train,
+  alpha = 1,               # LASSO
+  nfolds = 10,             # 10-fold CV
+  standardize = TRUE
+)
+```
+
+```{r}
+# Extract lambda values and RMSEs
+lambda_vals <- lasso_model$lambda
+cv_means <- sqrt(lasso_model$cvm)     # test RMSE
+cv_stds  <- sqrt(lasso_model$cvm + lasso_model$cvsd)  # upper bound
+train_preds_all <- predict(lasso_model, newx = X_train, s = lambda_vals)
+train_rmse_all <- apply(train_preds_all, 2, function(pred) sqrt(mean((y_train - pred)^2)))
+
+
+
+# Plot RMSEs vs log(lambda)
+
+df_plot <- data.frame(
+  log_lambda = log(lambda_vals),
+  Train_RMSE = train_rmse_all,
+  Test_RMSE = cv_means
+)
+
+ggplot(df_plot, aes(x = log_lambda)) +
+  geom_line(aes(y = Train_RMSE, color = "Train RMSE")) +
+  geom_line(aes(y = Test_RMSE, color = "Test RMSE")) +
+  geom_vline(xintercept = log(lasso_model$lambda.min), linetype = "dashed", color = "darkgreen") +
+  scale_color_manual(values = c("Train RMSE" = "blue", "Test RMSE" = "red")) +
+  labs(title = "Train vs Test RMSE over Lambda (LASSO)",
+       x = "log(Lambda)",
+       y = "RMSE",
+       color = "RMSE Type") +
+  theme_minimal()
+
+#Used Generative Ai for plotting help
+
+```
+
+
+---
+
+
+In this analysis, we employed a LASSO regression model to predict the outcome variable `12+` using various predictors, including whether or not the state experienced legalization (`Treated`), post-legalization status (`Post`), socioeconomic factors (such as `Poverty_Rate` and `Median_Income`), and fixed effects for `State` and `Year`. We used 10-fold cross-validation to tune the lambda parameter, and evaluated model performance using Train, Test, and Evaluation RMSE. The optimal lambda minimized test RMSE at 0.0186, and the evaluation RMSE was 0.0118, indicating the model performs reasonably well in out-of-sample prediction. This RMSE suggests a reasonable level of predictive accuracy, with the model capturing the key relationships between the predictors and the outcome, though further tuning or exploration of additional predictors could improve performance.
+
+```{r}
+# Predict
+train_preds <- predict(lasso_model, s = "lambda.min", newx = X_train)
+test_preds  <- predict(lasso_model, s = "lambda.min", newx = X_test)
+
+# RMSE function
+rmse <- function(actual, predicted) {
+  sqrt(mean((actual - predicted)^2))
+}
+
+# Results
+train_rmse <- rmse(y_train, train_preds)
+test_rmse  <- rmse(y_test,  test_preds)
+
+cat(glue::glue("Train RMSE: {round(train_rmse, 4)}\nTest RMSE: {round(test_rmse, 4)}"))
+```
+
+```{r}
+set.seed(123)
+n <- nrow(X)
+eval_idx <- sample(1:n, size = 0.10 * n)
+X_eval <- X[eval_idx, ]
+y_eval <- y[eval_idx]
+X_main <- X[-eval_idx, ]
+y_main <- y[-eval_idx]
+
+```
+
+```{r}
+# (After fitting lasso_model on X_train from X_main)
+eval_preds <- predict(lasso_model, newx = X_eval, s = "lambda.min")
+eval_rmse <- rmse(y_eval, eval_preds)
+cat(glue("Evaluation RMSE: {round(eval_rmse, 4)}"))
+
+```
