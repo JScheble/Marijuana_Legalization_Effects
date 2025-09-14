@@ -8,7 +8,7 @@ format:
 params:
   show_code: true
 execute:
-  echo: !expr params$show_code
+  echo: params$show_code
   warning: false
   message: false
 ---
@@ -127,19 +127,59 @@ pretrend_df <- full_df %>%
 
 This section explores the relationship between recreational marijuana legalization and past-year marijuana use among individuals aged 12 and older. We examine not only aggregate state-level trends, but also how treated states compare to controls over time, and whether legalization disrupted prior trends in meaningful ways.
 
-```{r, fig.width=9, fig.height=4, warning=FALSE}
-ggplot(usage_df, aes(x = Year, y = `12+`, color = State)) +
+
+
+
+
+```{r}
+df2 <- usage_df %>%
+  mutate(Group = ifelse(State %in% c("Colorado","Oregon","Washington"),
+                        "Legalized States (Treated)", "Non-legalized States (Control)"))
+df2$State <- factor(df2$State,
+                    levels = c( "Oregon", "Washington", "Colorado",
+                               "Georgia", "North Carolina", "Texas" ))
+
+min_year <- min(df2$Year); max_year <- max(df2$Year)
+
+lab_pos <- tibble::tribble(
+  ~label,                    ~x,    ~y,
+  "Legalized States (Treated)",     2003.9,  0.17,
+  "Non-legalized States (Control)", 2017,  0.10
+)
+
+legal_years <- data.frame(
+  State = c("Colorado", "Washington", "Oregon"),
+  Legal_Year = c(2011.8, 2012, 2014),
+   y_position = c(0.31, 0.275, 0.295)
+)
+```
+
+
+
+```{r, fig.width=12, fig.height=5, warning=FALSE}
+ggplot(df2, aes(x = Year, y = `12+`, color = State)) +
   geom_line(size = 1.2) +
+   geom_text(data = lab_pos, aes(x = x, y = y, label = label),
+            inherit.aes = FALSE, size = 3.8, fontface = "bold", hjust = 0) +
+   geom_vline(data = legal_years,
+             aes(xintercept = Legal_Year, color = State),
+             linetype = "dashed", size = 1, show.legend = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  coord_cartesian(clip = "off") +
   labs(
     title = "Marijuana Use (Past Year) Over Time by State",
-    subtitle = "Age 12+ Population, 2002–2023",
+    subtitle = "Age 12+ Population, 2002–2023. Dashed Lines = Legalization Year",
     x = "Year",
     y = "Marijuana Use Rate (12+)",
     color = "State"
   ) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  theme_minimal(base_size = 14)
+    theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    plot.margin = margin(5.5, 40, 5.5, 5.5, "pt")
+  )
 ```
+
 
 
 The first figure shows state-level trajectories in marijuana use from 2002–2023. We observe that states that eventually legalized marijuana—Colorado, Oregon, and Washington—experienced sharper increases in use compared to control states like Georgia, North Carolina, and Texas. Notably, usage rates began diverging more clearly around the early 2010s, aligning with the timing of legalization in treated states.
