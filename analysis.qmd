@@ -1,23 +1,24 @@
 ---
 title: "Impact of Marijuana on Usage Rates"
 author:
-  - "Authors: Anish Poudel, Cooper Scheble, Joseph Pelkey"
+  - name: Anish Poudel
+  - name: Cooper Scheble
+  - name: Joseph Pelkey
 format:
   html:
     theme: cosmo
 params:
   show_code: true
 execute:
-  echo: params$show_code
   warning: false
   message: false
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  echo    = params$show_code,
-  message = FALSE,
-  warning = FALSE
+  echo = params$show_code,
+  warning = FALSE,
+  message = FALSE
 )
 ```
 
@@ -156,7 +157,7 @@ legal_years <- data.frame(
 
 
 
-```{r, fig.width=12, fig.height=5, warning=FALSE}
+```{r, fig.width=14, fig.height=7, warning=FALSE}
 ggplot(df2, aes(x = Year, y = `12+`, color = State)) +
   geom_line(size = 1.2) +
    geom_text(data = lab_pos, aes(x = x, y = y, label = label),
