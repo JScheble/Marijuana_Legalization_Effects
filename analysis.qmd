@@ -8,7 +8,7 @@ format:
   html:
     theme: cosmo
 params:
-  show_code: true
+  show_code: false
 execute:
   warning: false
   message: false
