@@ -1,4 +1,29 @@
-.Rproj.user
-.Rhistory
+# R session data
 .RData
+.RDataTmp*
+.Rhistory
+.Rapp.history
 .Ruserdata
+
+# RStudio project user files
+.Rproj.user/
+
+# knitr / R Markdown cache and temp files
+*_cache/
+/cache/
+*.utf8.md
+*.knit.md
+
+# Quarto build output
+/.quarto/
+*_files/
+
+# R environment variables
+.Renviron
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
