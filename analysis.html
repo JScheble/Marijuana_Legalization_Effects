@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.24">
+<meta name="generator" content="quarto-1.8.27">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -10,7 +10,7 @@
 <meta name="author" content="Cooper Scheble">
 <meta name="author" content="Joseph Pelkey">
 
-<title>Impact of Marijuana on Usage Rates</title>
+<title>Impact of Marijuana Legalization on Usage Rates</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -69,23 +69,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="analysis_files/libs/quarto-html/anchor.min.js"></script>
 <link href="analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="analysis_files/libs/quarto-html/quarto-syntax-highlighting-dc55a5b9e770e841cd82e46aadbfb9b0.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="analysis_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="analysis_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="analysis_files/libs/bootstrap/bootstrap-4d7f0bce1131f3e5f9547cd857cfbfc8.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="fullcontent quarto-light">
+<body class="quarto-light">
 
-<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#intro" id="toc-intro" class="nav-link active" data-scroll-target="#intro">Intro</a></li>
+  <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">1. Data</a></li>
+  <li><a href="#visualization" id="toc-visualization" class="nav-link" data-scroll-target="#visualization">2. Visualization</a></li>
+  <li><a href="#predictive-model" id="toc-predictive-model" class="nav-link" data-scroll-target="#predictive-model">3. Predictive Model</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Impact of Marijuana on Usage Rates</h1>
+<h1 class="title">Impact of Marijuana Legalization on Usage Rates</h1>
 </div>
 
 
@@ -120,26 +135,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>To account for state-to-state differences, we also sourced poverty rate, state population, and median income for each year from Census Bureau summarizations. We merged these variables with state usage data to control for underlying socioeconomic differences. To control for education differences we added a variable showing the percentage of people with a bachelor’s degree or above. However, missing data before 2007 impacted our model too heavily to include it in our final dataset. We excluded observations where survey or economic data were missing for specific state-year pairs to avoid introducing bias.</p>
 <p>The data contains 114 state-year observations across 6 states, covering the period of 2002-2022. The average percentage of people 12+ who have tried marijuana in the past year was ~ 15%. Ages 18-25 were significantly higher at ~33% of people. Average median income was 54,000$ and poverty rates ranged from 9.6%-19.20% depending on the state and year.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load Main Usage Dataset</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>usage_df <span class="ot">&lt;-</span> <span class="fu">read_excel</span>(<span class="st">"StateMarijuanaData.xlsx"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Clean the Year Pair variable to just one year.</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>usage_df <span class="ot">&lt;-</span> usage_df <span class="sc">%&gt;%</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Year =</span> <span class="fu">as.numeric</span>(<span class="fu">sub</span>(<span class="st">"-.*"</span>, <span class="st">""</span>, year_pair)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load in datasets</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Poverty_df <span class="ot">&lt;-</span> <span class="fu">read_xlsx</span>(<span class="st">"Poverty Rates.xlsx"</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>State_Pop <span class="ot">&lt;-</span> <span class="fu">read_xlsx</span>(<span class="st">"State_Populations.xlsx"</span>)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>Median_Income <span class="ot">&lt;-</span> <span class="fu">read_xlsx</span>(<span class="st">"MedianIncome.xlsx"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Rename Variable in Usage Dataset</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>usage_df <span class="ot">&lt;-</span> usage_df <span class="sc">%&gt;%</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">State =</span> geography)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Join the Datasets</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>full_df <span class="ot">&lt;-</span> usage_df <span class="sc">%&gt;%</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(Poverty_df, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"State"</span>, <span class="st">"Year"</span>))</span>
@@ -149,11 +178,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>full_df <span class="ot">&lt;-</span> full_df <span class="sc">%&gt;%</span></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(Median_Income, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"State"</span>, <span class="st">"Year"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(full_df, <span class="st">"C:/Users/13124/Downloads/merged_marijuana_data.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(full_df, <span class="st">"merged_marijuana_data.csv"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Create binary Post Variable, set to 1 = Post Legalization</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>full_df <span class="ot">&lt;-</span> full_df <span class="sc">%&gt;%</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -164,16 +199,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">0</span></span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Mark the Treated States in the dataset</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>full_df <span class="ot">&lt;-</span> full_df <span class="sc">%&gt;%</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">Treated =</span> <span class="fu">if_else</span>(State <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Colorado"</span>, <span class="st">"Washington"</span>, <span class="st">"Oregon"</span>), <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Section off the Treated States</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>treated_states <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Colorado"</span>, <span class="st">"Washington"</span>, <span class="st">"Oregon"</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -184,12 +225,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Group =</span> <span class="fu">if_else</span>(State <span class="sc">%in%</span> treated_states, <span class="st">"Treated"</span>, <span class="st">"Control"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Year, Group) <span class="sc">%&gt;%</span></span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">Avg_Use =</span> <span class="fu">mean</span>(<span class="st">`</span><span class="at">12+</span><span class="st">`</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 </section>
 <section id="visualization" class="level2">
 <h2 class="anchored" data-anchor-id="visualization">2. Visualization</h2>
 <p>This section explores the relationship between recreational marijuana legalization and past-year marijuana use among individuals aged 12 and older. We examine not only aggregate state-level trends, but also how treated states compare to controls over time, and whether legalization disrupted prior trends in meaningful ways.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df2 <span class="ot">&lt;-</span> usage_df <span class="sc">%&gt;%</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Group =</span> <span class="fu">ifelse</span>(State <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"Colorado"</span>,<span class="st">"Oregon"</span>,<span class="st">"Washington"</span>),</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"Legalized States (Treated)"</span>, <span class="st">"Non-legalized States (Control)"</span>))</span>
@@ -210,8 +254,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">Legal_Year =</span> <span class="fu">c</span>(<span class="fl">2011.8</span>, <span class="dv">2012</span>, <span class="dv">2014</span>),</span>
 <span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>   <span class="at">y_position =</span> <span class="fu">c</span>(<span class="fl">0.31</span>, <span class="fl">0.275</span>, <span class="fl">0.295</span>)</span>
 <span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df2, <span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> <span class="st">`</span><span class="at">12+</span><span class="st">`</span>, <span class="at">color =</span> State)) <span class="sc">+</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_text</span>(<span class="at">data =</span> lab_pos, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">label =</span> label),</span>
@@ -233,6 +280,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="fl">5.5</span>, <span class="dv">40</span>, <span class="fl">5.5</span>, <span class="fl">5.5</span>, <span class="st">"pt"</span>)</span>
 <span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -244,6 +292,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The first figure shows state-level trajectories in marijuana use from 2002–2023. We observe that states that eventually legalized marijuana—Colorado, Oregon, and Washington—experienced sharper increases in use compared to control states like Georgia, North Carolina, and Texas. Notably, usage rates began diverging more clearly around the early 2010s, aligning with the timing of legalization in treated states.</p>
 <p>&nbsp;</p>
 <div class="cell" data-layout-align="center">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pretrend_df, <span class="fu">aes</span>(<span class="at">x =</span> Year, <span class="at">y =</span> Avg_Use, <span class="at">color =</span> Group)) <span class="sc">+</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.4</span>) <span class="sc">+</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
@@ -261,6 +311,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">13</span>)</span>
 <span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -271,6 +322,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Moving forward we focused on the pre-legalization period (2002–2013) and compared average marijuana use across treated and control groups. The parallel trajectories before policy adoption suggest that these groups followed similar trends before legalization—supporting the parallel trends assumption necessary for causal inference via difference-in-differences. <br><br> <br><br> <br><br> <br><br></p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Model for testing 12+ with our control and factor variables</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>model_adult_controls <span class="ot">&lt;-</span> <span class="fu">lm</span>(</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">12+</span><span class="st">`</span> <span class="sc">~</span> Treated<span class="sc">:</span>Post <span class="sc">+</span> Median_Income <span class="sc">+</span> Poverty_Rate <span class="sc">+</span></span>
@@ -288,6 +341,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>pval     <span class="ot">&lt;-</span> <span class="fu">signif</span>(treated_post<span class="sc">$</span>p.value, <span class="dv">3</span>)</span>
 <span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">glue</span>(<span class="st">"Legalization is associated with a {estimate}% point increase in </span><span class="sc">\n</span><span class="st">past-year marijuana use among individuals aged 12 and older </span><span class="sc">\n</span><span class="st">(SE = {se}, p = {pval})."</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Legalization is associated with a 5.89% point increase in 
 past-year marijuana use among individuals aged 12 and older 
@@ -295,6 +349,8 @@ past-year marijuana use among individuals aged 12 and older
 </div>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>legal_years <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">State =</span> <span class="fu">c</span>(<span class="st">"Colorado"</span>, <span class="st">"Washington"</span>, <span class="st">"Oregon"</span>),</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Legal_Year =</span> <span class="fu">c</span>(<span class="dv">2014</span>, <span class="dv">2014</span>, <span class="dv">2015</span>),</span>
@@ -345,6 +401,7 @@ past-year marijuana use among individuals aged 12 and older
 <span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
 <span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>)</span>
 <span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -352,10 +409,15 @@ past-year marijuana use among individuals aged 12 and older
 </figure>
 </div>
 </div>
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Used Generative Ai for help modeling graph</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <p>Now we compare observed marijuana use in the treated states to counterfactual predictions based on control states. In all three states, observed usage trends slightly exceed predicted values in various years following legalization, though the differences are modest and not uniform over time. In Colorado and Oregon, the gap is visible but narrow, but specifically in Oregon eventually, the prediction exceeds reality. However, in Washington, the lines largely converge again by the end of the series after over-estimating immediately following legalization. These patterns suggest that legalization may have contributed to a mild uptick in adult marijuana use, but the effect size appears small and attenuates over time. Overall, Legalization is associated with a 5.89% point increase in past-year marijuana use among individuals aged 12 and older.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>legal_years <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">State =</span> <span class="fu">c</span>(<span class="st">"Colorado"</span>, <span class="st">"Washington"</span>, <span class="st">"Oregon"</span>),</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Legal_Year =</span> <span class="fu">c</span>(<span class="dv">2014</span>, <span class="dv">2014</span>, <span class="dv">2015</span>)</span>
@@ -381,6 +443,7 @@ past-year marijuana use among individuals aged 12 and older
 <span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">15</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
 <span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">18</span>, <span class="at">face =</span> <span class="st">"bold"</span>)</span>
 <span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -388,30 +451,41 @@ past-year marijuana use among individuals aged 12 and older
 </figure>
 </div>
 </div>
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Used Generative Ai for help modeling graph</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <p>Finally, we isolated the impact of legalization on teen marijuana use. In contrast to adults, no post-legalization increase is observed among teens in the treated states. Usage rates remained flat or even declined slightly, diverging from the pattern observed in the overall population. This suggests that legalization did not lead to greater marijuana use among adolescents, countering a common concern.</p>
 <p>Among teens (ages 12–17), legalization was associated with a 0.36 percentage point increase in past-year marijuana use, though this effect was not statistically significant (p = 0.265, SE = 0.0036).</p>
 <p>Together, these visuals reveal a clear story: legalization led to increased marijuana use among adults but not among teens. The analysis underscores the value of disaggregating effects by age group and highlights how policy impacts can differ sharply within a population.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Results from running Regression on just the teen data,</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>model_teen <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="st">`</span><span class="at">12-17</span><span class="st">`</span> <span class="sc">~</span> Treated<span class="sc">:</span>Post <span class="sc">+</span> <span class="fu">factor</span>(State) <span class="sc">+</span> <span class="fu">factor</span>(Year), <span class="at">data =</span> full_df)</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>model_teen_tibble <span class="ot">&lt;-</span> <span class="fu">tidy</span>(model_teen) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(term <span class="sc">==</span> <span class="st">"Treated:Post"</span>)</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">#model_teen_tibble</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 </section>
 <section id="predictive-model" class="level2">
 <h2 class="anchored" data-anchor-id="predictive-model">3. Predictive Model</h2>
 <p>&nbsp;</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">12+</span><span class="st">`</span> <span class="sc">~</span> (Treated <span class="sc">+</span> Post <span class="sc">+</span> Poverty_Rate <span class="sc">+</span> Median_Income <span class="sc">+</span> <span class="fu">factor</span>(State) <span class="sc">+</span> <span class="fu">factor</span>(Year))<span class="sc">^</span><span class="dv">2</span>,</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> full_df</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>)[, <span class="sc">-</span><span class="dv">1</span>]  <span class="co"># Remove intercept</span></span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> full_df<span class="sc">$</span><span class="st">`</span><span class="at">12+</span><span class="st">`</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(X)</span>
@@ -427,8 +501,11 @@ past-year marijuana use among individuals aged 12 and older
 <span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>X_test  <span class="ot">&lt;-</span> X_main[<span class="sc">-</span>train_indices, ]</span>
 <span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>y_train <span class="ot">&lt;-</span> y_main[train_indices]</span>
 <span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>y_test  <span class="ot">&lt;-</span> y_main[<span class="sc">-</span>train_indices]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit LASSO (alpha = 1)</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>lasso_model <span class="ot">&lt;-</span> <span class="fu">cv.glmnet</span>(</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  X_train, y_train,</span>
@@ -436,8 +513,11 @@ past-year marijuana use among individuals aged 12 and older
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">nfolds =</span> <span class="dv">10</span>,             <span class="co"># 10-fold CV</span></span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">standardize =</span> <span class="cn">TRUE</span></span>
 <span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract lambda values and RMSEs</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>lambda_vals <span class="ot">&lt;-</span> lasso_model<span class="sc">$</span>lambda</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>cv_means <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(lasso_model<span class="sc">$</span>cvm)     <span class="co"># test RMSE</span></span>
@@ -465,6 +545,7 @@ past-year marijuana use among individuals aged 12 and older
 <span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"RMSE"</span>,</span>
 <span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"RMSE Type"</span>) <span class="sc">+</span></span>
 <span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -472,11 +553,16 @@ past-year marijuana use among individuals aged 12 and older
 </figure>
 </div>
 </div>
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Used Generative Ai for plotting help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <hr>
 <p>In this analysis, we employed a LASSO regression model to predict the outcome variable <code>12+</code> using various predictors, including whether or not the state experienced legalization (<code>Treated</code>), post-legalization status (<code>Post</code>), socioeconomic factors (such as <code>Poverty_Rate</code> and <code>Median_Income</code>), and fixed effects for <code>State</code> and <code>Year</code>. We used 10-fold cross-validation to tune the lambda parameter, and evaluated model performance using Train, Test, and Evaluation RMSE. The optimal lambda minimized test RMSE at 0.0186, and the evaluation RMSE was 0.0118, indicating the model performs reasonably well in out-of-sample prediction. This RMSE suggests a reasonable level of predictive accuracy, with the model capturing the key relationships between the predictors and the outcome, though further tuning or exploration of additional predictors could improve performance.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Predict</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>train_preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(lasso_model, <span class="at">s =</span> <span class="st">"lambda.min"</span>, <span class="at">newx =</span> X_train)</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>test_preds  <span class="ot">&lt;-</span> <span class="fu">predict</span>(lasso_model, <span class="at">s =</span> <span class="st">"lambda.min"</span>, <span class="at">newx =</span> X_test)</span>
@@ -491,12 +577,15 @@ past-year marijuana use among individuals aged 12 and older
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>test_rmse  <span class="ot">&lt;-</span> <span class="fu">rmse</span>(y_test,  test_preds)</span>
 <span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"Train RMSE: {round(train_rmse, 4)}</span><span class="sc">\n</span><span class="st">Test RMSE: {round(test_rmse, 4)}"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Train RMSE: 0.0051
 Test RMSE: 0.0186</code></pre>
 </div>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(X)</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>eval_idx <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, <span class="at">size =</span> <span class="fl">0.10</span> <span class="sc">*</span> n)</span>
@@ -504,12 +593,16 @@ Test RMSE: 0.0186</code></pre>
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>y_eval <span class="ot">&lt;-</span> y[eval_idx]</span>
 <span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>X_main <span class="ot">&lt;-</span> X[<span class="sc">-</span>eval_idx, ]</span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>y_main <span class="ot">&lt;-</span> y[<span class="sc">-</span>eval_idx]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># (After fitting lasso_model on X_train from X_main)</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>eval_preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(lasso_model, <span class="at">newx =</span> X_eval, <span class="at">s =</span> <span class="st">"lambda.min"</span>)</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>eval_rmse <span class="ot">&lt;-</span> <span class="fu">rmse</span>(y_eval, eval_preds)</span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">glue</span>(<span class="st">"Evaluation RMSE: {round(eval_rmse, 4)}"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>Evaluation RMSE: 0.0118</code></pre>
 </div>
@@ -518,6 +611,53 @@ Test RMSE: 0.0186</code></pre>
 
 </main>
 <!-- /main column -->
+<button id="code-toggle" onclick="toggleCode()" style="
+
+  position: fixed;
+
+  bottom: 30px;
+
+  right: 30px;
+
+  z-index: 9999;
+
+  background: #2c3e50;
+
+  color: white;
+
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+">Show Code</button>
+
+
+
+<script>
+
+  let codeVisible = false;
+
+  function toggleCode() {
+
+    const details = document.querySelectorAll('details.code-fold');
+
+    codeVisible = !codeVisible;
+
+    details.forEach(d => d.open = codeVisible);
+
+    document.getElementById('code-toggle').textContent = codeVisible ? 'Hide Code' : 'Show Code';
+
+  }
+
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
@@ -923,4 +1063,5 @@ Test RMSE: 0.0186</code></pre>
 
 
 
+<script src="analysis_files/libs/quarto-html/zenscroll-min.js"></script>
 </body></html>

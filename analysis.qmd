@@ -1,26 +1,25 @@
 ---
-title: "Impact of Marijuana on Usage Rates"
+title: "Impact of Marijuana Legalization on Usage Rates"
 author:
   - name: Anish Poudel
   - name: Cooper Scheble
   - name: Joseph Pelkey
 format:
   html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    code-fold: true
     theme: cosmo
-params:
-  show_code: false
+    smooth-scroll: true
+    number-sections: false
+    include-after-body: toggle_button.html
+    css: styles.css
 execute:
-  warning: false
   message: false
+  warning: false
+  echo: true
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-  echo = params$show_code,
-  warning = FALSE,
-  message = FALSE
-)
-```
 
 ```{r, include=FALSE}
 library(ggplot2)
@@ -43,11 +42,11 @@ This project investigates the impact of marijuana legalization on usage rates ac
 
 ## 1. Data
 
-Our analysis draws from a combination of different different sources. We sourced the data for marijuana usage rates from the Substance Abuse and Mental Health Services Administration. To assess the effects of marijuana legalization, we constructed indicators for treatment timing and legalization exposure. States that legalized marijuana in the 2010s—Colorado, Washington, and Oregon—serve as treated units, while a group of comparison states that did not legalize are used for controls. 
+Our analysis draws from a combination of different different sources. We sourced the data for marijuana usage rates from the Substance Abuse and Mental Health Services Administration. To assess the effects of marijuana legalization, we constructed indicators for treatment timing and legalization exposure. States that legalized marijuana in the 2010s—Colorado, Washington, and Oregon—serve as treated units, while a group of comparison states that did not legalize are used for controls.
 
-To account for state-to-state differences, we also sourced poverty rate, state population, and median income for each year from Census Bureau summarizations. We merged these variables with state usage data to control for underlying socioeconomic differences. To control for education differences we added a variable showing the percentage of people with a bachelor's degree or above. However, missing data before 2007 impacted our model too heavily to include it in our final dataset. We excluded observations where survey or economic data were missing for specific state-year pairs to avoid introducing bias. 
+To account for state-to-state differences, we also sourced poverty rate, state population, and median income for each year from Census Bureau summarizations. We merged these variables with state usage data to control for underlying socioeconomic differences. To control for education differences we added a variable showing the percentage of people with a bachelor's degree or above. However, missing data before 2007 impacted our model too heavily to include it in our final dataset. We excluded observations where survey or economic data were missing for specific state-year pairs to avoid introducing bias.
 
-The data contains 114 state-year observations across 6 states, covering the period of 2002-2022. The average percentage of people 12+ who have tried marijuana in the past year was ~ 15%. Ages 18-25 were significantly higher at ~33% of people. Average median income was 54,000$ and poverty rates ranged from 9.6%-19.20% depending on the state and year.
+The data contains 114 state-year observations across 6 states, covering the period of 2002-2022. The average percentage of people 12+ who have tried marijuana in the past year was \~ 15%. Ages 18-25 were significantly higher at \~33% of people. Average median income was 54,000\$ and poverty rates ranged from 9.6%-19.20% depending on the state and year.
 
 ```{r}
 #Load Main Usage Dataset
@@ -86,7 +85,7 @@ full_df <- full_df %>%
 ```
 
 ```{r}
-write_csv(full_df, "C:/Users/13124/Downloads/merged_marijuana_data.csv")
+write_csv(full_df, "merged_marijuana_data.csv")
 ```
 
 ```{r}
@@ -128,10 +127,6 @@ pretrend_df <- full_df %>%
 
 This section explores the relationship between recreational marijuana legalization and past-year marijuana use among individuals aged 12 and older. We examine not only aggregate state-level trends, but also how treated states compare to controls over time, and whether legalization disrupted prior trends in meaningful ways.
 
-
-
-
-
 ```{r}
 df2 <- usage_df %>%
   mutate(Group = ifelse(State %in% c("Colorado","Oregon","Washington"),
@@ -154,8 +149,6 @@ legal_years <- data.frame(
    y_position = c(0.31, 0.275, 0.295)
 )
 ```
-
-
 
 ```{r, fig.width=14, fig.height=7, warning=FALSE}
 ggplot(df2, aes(x = Year, y = `12+`, color = State)) +
@@ -181,11 +174,9 @@ ggplot(df2, aes(x = Year, y = `12+`, color = State)) +
   )
 ```
 
-
-
 The first figure shows state-level trajectories in marijuana use from 2002–2023. We observe that states that eventually legalized marijuana—Colorado, Oregon, and Washington—experienced sharper increases in use compared to control states like Georgia, North Carolina, and Texas. Notably, usage rates began diverging more clearly around the early 2010s, aligning with the timing of legalization in treated states.
 
-&nbsp;  
+ 
 
 ```{r fig.height=4, fig.width=7, fig.align='center'}
 
@@ -208,12 +199,7 @@ ggplot(pretrend_df, aes(x = Year, y = Avg_Use, color = Group)) +
   )
 ```
 
-
-Moving forward we focused on the pre-legalization period (2002–2013) and compared average marijuana use across treated and control groups. The parallel trajectories before policy adoption suggest that these groups followed similar trends before legalization—supporting the parallel trends assumption necessary for causal inference via difference-in-differences.
-<br><br>
-<br><br>
-<br><br>
-<br><br>
+Moving forward we focused on the pre-legalization period (2002–2013) and compared average marijuana use across treated and control groups. The parallel trajectories before policy adoption suggest that these groups followed similar trends before legalization—supporting the parallel trends assumption necessary for causal inference via difference-in-differences. <br><br> <br><br> <br><br> <br><br>
 
 ```{r}
 #Model for testing 12+ with our control and factor variables
@@ -323,9 +309,6 @@ ggplot(teen_plot_df, aes(x = Year, y = `12-17`)) +
 #Used Generative Ai for help modeling graph
 ```
 
-
-
-
 Finally, we isolated the impact of legalization on teen marijuana use. In contrast to adults, no post-legalization increase is observed among teens in the treated states. Usage rates remained flat or even declined slightly, diverging from the pattern observed in the overall population. This suggests that legalization did not lead to greater marijuana use among adolescents, countering a common concern.
 
 Among teens (ages 12–17), legalization was associated with a 0.36 percentage point increase in past-year marijuana use, though this effect was not statistically significant (p = 0.265, SE = 0.0036).
@@ -341,7 +324,7 @@ model_teen_tibble <- tidy(model_teen) %>% filter(term == "Treated:Post")
 
 ## 3. Predictive Model
 
-&nbsp;
+ 
 
 ```{r}
 X <- model.matrix(
@@ -414,9 +397,7 @@ ggplot(df_plot, aes(x = log_lambda)) +
 
 ```
 
-
----
-
+------------------------------------------------------------------------
 
 In this analysis, we employed a LASSO regression model to predict the outcome variable `12+` using various predictors, including whether or not the state experienced legalization (`Treated`), post-legalization status (`Post`), socioeconomic factors (such as `Poverty_Rate` and `Median_Income`), and fixed effects for `State` and `Year`. We used 10-fold cross-validation to tune the lambda parameter, and evaluated model performance using Train, Test, and Evaluation RMSE. The optimal lambda minimized test RMSE at 0.0186, and the evaluation RMSE was 0.0118, indicating the model performs reasonably well in out-of-sample prediction. This RMSE suggests a reasonable level of predictive accuracy, with the model capturing the key relationships between the predictors and the outcome, though further tuning or exploration of additional predictors could improve performance.
 
